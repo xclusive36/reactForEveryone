@@ -3,9 +3,9 @@ import { Filter } from "../Filter";
 import { Movie } from "./Movie";
 
 const API_URL =
-    "https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=4b6858b949f6606af133139121d19491&page=1";
+    "https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&page=1&api_key=";
 const CONFIG_URL =
-    "https://api.themoviedb.org/3/configuration?api_key=4b6858b949f6606af133139121d19491";
+    "https://api.themoviedb.org/3/configuration?api_key=";
 
 export const MoviesList = () => {
     const [filter, setFilter] = useState("");
@@ -14,7 +14,7 @@ export const MoviesList = () => {
 
     const getMovies = async () => {
         try {
-            const response = await fetch(API_URL);
+            const response = await fetch(API_URL + process.env.REACT_APP_MOVIE_API);
             const data = await response.json();
             setMovies(data.results);
         } catch (error) {
@@ -24,7 +24,7 @@ export const MoviesList = () => {
 
     const getConfig = async () => {
         try {
-            const response = await fetch(CONFIG_URL);
+            const response = await fetch(CONFIG_URL + process.env.REACT_APP_MOVIE_API);
             const data = await response.json();
             setConfig(data);
         } catch (error) {
@@ -38,7 +38,7 @@ export const MoviesList = () => {
     }, []);
 
     return (
-        <div>
+        <div className="content">
             <Filter filter={filter} setFilter={setFilter} />
             <ul className="movies-list">
                 {movies
