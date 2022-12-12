@@ -1,54 +1,54 @@
 import React, { useState, useEffect } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 import { Filter } from "../Filter";
 import { Movie } from "./Movie";
 
-const API_URL =
-    "https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&page=1&api_key=";
-const CONFIG_URL =
-    "https://api.themoviedb.org/3/configuration?api_key=";
+import { getMovies, getConfig } from "./actions";
 
-export const MoviesList = () => {
+const MoviesList = ({ movies, getMovies, config, getConfig, isLoaded, moviesLoadedAt }) => {
     const [filter, setFilter] = useState("");
-    const [movies, setMovies] = useState([]);
-    const [config, setConfig] = useState({});
-
-    const getMovies = async () => {
-        try {
-            const response = await fetch(API_URL + process.env.REACT_APP_MOVIE_API);
-            const data = await response.json();
-            setMovies(data.results);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const getConfig = async () => {
-        try {
-            const response = await fetch(CONFIG_URL + process.env.REACT_APP_MOVIE_API);
-            const data = await response.json();
-            setConfig(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
     useEffect(() => {
-        getConfig();
-        getMovies();
-    }, []);
+        if (!isLoaded || ((new Date()) - new Date(moviesLoadedAt)) > 1000 * 60 * 60) {
+            getMovies();
+            getConfig();
+        }
+    }, [getConfig, getMovies, isLoaded, movies, moviesLoadedAt]);
 
     return (
-        <div className="content">
-            <Filter filter={filter} setFilter={setFilter} />
-            <ul className="movies-list">
-                {movies
-                    ?.filter((movie) =>
-                        movie.title.toLowerCase().includes(filter.toLowerCase())
-                    )
-                    .map((movie) => (
-                        <Movie key={movie.id} config={config} movie={movie} />
-                    ))}
-            </ul>
-        </div>
+        <>
+            {!isLoaded && <h2>Loading...</h2>}
+            <div className="content">
+                <Filter filter={filter} setFilter={setFilter} />
+                <ul className="movies-list">
+                    {movies
+                        ?.filter((movie) =>
+                            movie.title
+                                .toLowerCase()
+                                .includes(filter.toLowerCase())
+                        )
+                        .map((movie) => (
+                            <Movie
+                                key={movie.id}
+                                config={config}
+                                movie={movie}
+                            />
+                        ))}
+                </ul>
+            </div>
+        </>
     );
 };
+
+const mapStateToProps = (state) => ({
+    movies: state.movies.movies,
+    isLoaded: state.movies.moviesLoaded,
+    moviesLoadedAt: state.movies.moviesLoadedAt,
+    config: state.movies.config,
+});
+
+const mapDispatchToProps = (dispatch) =>
+    bindActionCreators({ getMovies, getConfig }, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(MoviesList);
