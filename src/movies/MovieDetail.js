@@ -1,30 +1,22 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 import { useParams } from "react-router-dom";
+import { getMovie, resetMovie } from "./actions";
 
-const BASE_URL = "https://api.themoviedb.org/3/movie/";
 const IMAGE_URL = "https://image.tmdb.org/t/p/";
 const BACKDROP_SIZE = "original";
 const POSTER_SIZE = "w342";
 
-export const MovieDetail = () => {
+const MovieDetail = ({ getMovie, resetMovie, isLoaded, movie }) => {
     const { id } = useParams();
-    const [movie, setMovie] = useState({});
-
-    const getMovie = useCallback(async () => {
-        try {
-            const response = await fetch(
-                `${BASE_URL}${id}?api_key=${process.env.REACT_APP_MOVIE_API}`
-            );
-            const data = await response.json();
-            setMovie(data);
-        } catch (error) {
-            console.error(error);
-        }
-    }, [id]);
 
     useEffect(() => {
-        getMovie();
-    }, [getMovie]);
+        if (!isLoaded) getMovie(id);
+        return () => {
+            if (!isLoaded) resetMovie();
+        };
+    }, []);
 
     if (!movie.title) return null;
 
@@ -54,3 +46,13 @@ export const MovieDetail = () => {
         </div>
     );
 };
+
+const mapStateToProps = (state) => ({
+    movie: state.movies.movie,
+    isLoaded: state.movies.movieLoaded,
+});
+
+const mapDispatchToProps = (dispatch) =>
+    bindActionCreators({ getMovie, resetMovie }, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(MovieDetail);
